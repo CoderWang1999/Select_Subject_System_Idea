@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.springblade.modules.business.mapper.TeacherMapper">
+    <select id="selectTeacherPage" resultType="org.springblade.modules.business.vo.TeacherVO">
+        SELECT
+        tt.*,
+        u.real_name as teacherName,
+        d.dept_name as teacherDept,
+        tt.student_amount as studentAmount
+        FROM
+        t_teacher as tt,
+        blade_user as u,
+        blade_dept as d
+        WHERE
+        tt.teacher_id=u.id
+        AND
+        u.dept_id=d.id
+        AND
+        tt.is_deleted=0
+        AND
+        u.is_deleted=0
+        AND
+        d.is_deleted=0
+    </select>
+    <select id="findById" resultType="org.springblade.modules.business.vo.TeacherVO">
+        SELECT
+        tt.*,
+        u.real_name as teacherName,
+        d.dept_name as teacherDept,
+        tt.student_amount as studentAmount
+        FROM
+        t_teacher as tt,
+        blade_user as u,
+        blade_dept as d
+        WHERE
+        tt.teacher_id=u.id
+        AND
+        u.dept_id=d.id
+        AND
+        tt.is_deleted=0
+        AND
+        u.is_deleted=0
+        AND
+        d.is_deleted=0
+        AND
+        tt.id=#{id}
+    </select>
+</mapper>
