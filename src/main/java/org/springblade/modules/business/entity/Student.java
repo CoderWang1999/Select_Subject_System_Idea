@@ -27,14 +27,14 @@ import io.swagger.annotations.ApiModelProperty;
 /**
  * 实体类
  *
- * @author CoderWang
+ * @author Blade
  * @since 2021-02-05
  */
 @Data
-@TableName("t_teacher")
+@TableName("t_student")
 @EqualsAndHashCode(callSuper = true)
-@ApiModel(value = "Teacher对象", description = "Teacher对象")
-public class Teacher extends BaseEntity {
+@ApiModel(value = "Student对象", description = "Student对象")
+public class Student extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -45,16 +45,17 @@ public class Teacher extends BaseEntity {
 	@JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     /**
+     * 学生id
+     */
+    @ApiModelProperty(value = "学生id")
+	@JsonSerialize(using = ToStringSerializer.class)
+    private Long studentId;
+    /**
      * 老师id
      */
     @ApiModelProperty(value = "老师id")
 	@JsonSerialize(using = ToStringSerializer.class)
     private Long teacherId;
-    /**
-     * 学生数量
-     */
-    @ApiModelProperty(value = "学生数量")
-    private Integer studentAmount;
 
 
 }

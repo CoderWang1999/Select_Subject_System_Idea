@@ -20,6 +20,7 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
+import javax.validation.Valid;
 import org.springblade.core.mp.support.Condition;
 import org.springblade.core.mp.support.Query;
 import org.springblade.core.secure.BladeUser;
@@ -29,89 +30,91 @@ import org.springblade.core.tool.utils.Func;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import org.springblade.modules.business.entity.Teacher;
-import org.springblade.modules.business.vo.TeacherVO;
-import org.springblade.modules.business.service.ITeacherService;
+import org.springblade.modules.business.entity.Student;
+import org.springblade.modules.business.vo.StudentVO;
+import org.springblade.modules.business.service.IStudentService;
 import org.springblade.core.boot.ctrl.BladeController;
 
 /**
- * 控制器
  *
  * @author CoderWang
  * @since 2021-02-05
  */
 @RestController
 @AllArgsConstructor
-@RequestMapping("blade-amount/teacher")
-@Api(value = "可辅导学生数量管理", tags = "可辅导学生数量管理")
-public class TeacherController extends BladeController {
+@RequestMapping("blade-student/student")
+@Api(value = "选择指导老师", tags = "选择指导老师")
+public class StudentController extends BladeController {
 
-	private ITeacherService teacherService;
+	private IStudentService studentService;
 
 	/**
 	 * 详情
 	 */
 	@GetMapping("/detail")
 	@ApiOperationSupport(order = 1)
-	@ApiOperation(value = "详情", notes = "传入teacher")
-	public R<Teacher> detail(Teacher teacher) {
-		Long id = teacher.getId();
-		TeacherVO detail = teacherService.findById(id);
+	@ApiOperation(value = "详情", notes = "传入student")
+	public R<Student> detail(Student student) {
+		Student detail = studentService.getOne(Condition.getQueryWrapper(student));
 		return R.data(detail);
 	}
 
 
 	/**
-	 * 自定义分页
+	 * 自定义分页 
 	 */
 	@GetMapping("/page")
 	@ApiOperationSupport(order = 3)
-	@ApiOperation(value = "分页", notes = "传入teacher")
-	public R<IPage<TeacherVO>> page(TeacherVO teacher, Query query) {
-		IPage<TeacherVO> pages = teacherService.selectTeacherPage(Condition.getPage(query), teacher);
+	@ApiOperation(value = "分页", notes = "传入student")
+	public R<IPage<StudentVO>> page(StudentVO student, Query query) {
+		IPage<StudentVO> pages = studentService.selectStudentPage(Condition.getPage(query), student);
 		return R.data(pages);
 	}
 
 	/**
-	 * 设置可辅导学生数量
+	 * 选择老师
 	 */
 	@PostMapping("/save")
 	@ApiOperationSupport(order = 4)
-	@ApiOperation(value = "设置可辅导学生数量", notes = "传入数量")
-	public R save(@ApiParam(value = "数量", required = true) @RequestParam(required = true) Integer studentAmount) {
-		Teacher teacher = new Teacher();
-		teacher.setStudentAmount(studentAmount);
+	@ApiOperation(value = "选择老师", notes = "传入student")
+	public R save(@ApiParam(value = "老师id", required = true) @RequestParam(required = true) String teacherId) {
+		Student student = new Student();
+		long l = Long.parseLong(teacherId);
+		student.setTeacherId(l);
 		BladeUser user = SecureUtil.getUser();
 		Long userId = user.getUserId();
-		teacher.setTeacherId(userId);
-		return R.status(teacherService.save(teacher));
+		student.setStudentId(userId);
+		return R.status(studentService.save(student));
 	}
 
 	/**
-	 * 修改
+	 * 修改 
 	 */
 	@PostMapping("/update")
 	@ApiOperationSupport(order = 5)
-	@ApiOperation(value = "修改", notes = "传入teacher")
-	public R update(@ApiParam(value = "id", required = true) @RequestParam(required = true) String id,
-					@ApiParam(value = "数量", required = true) @RequestParam(required = true) Integer studentAmount) {
-		Teacher teacher = teacherService.getById(id);
-		if (teacher!=null){
-			teacher.setStudentAmount(studentAmount);
-			return R.status(teacherService.updateById(teacher));
-		}
-		return null;
+	@ApiOperation(value = "修改", notes = "传入student")
+	public R update(@Valid @RequestBody Student student) {
+		return R.status(studentService.updateById(student));
 	}
 
-
 	/**
-	 * 删除
+	 * 新增或修改 
+	 */
+	@PostMapping("/submit")
+	@ApiOperationSupport(order = 6)
+	@ApiOperation(value = "新增或修改", notes = "传入student")
+	public R submit(@Valid @RequestBody Student student) {
+		return R.status(studentService.saveOrUpdate(student));
+	}
+
+	
+	/**
+	 * 删除 
 	 */
 	@PostMapping("/remove")
 	@ApiOperationSupport(order = 7)
 	@ApiOperation(value = "逻辑删除", notes = "传入ids")
 	public R remove(@ApiParam(value = "主键集合", required = true) @RequestParam String ids) {
-		return R.status(teacherService.deleteLogic(Func.toLongList(ids)));
+		return R.status(studentService.deleteLogic(Func.toLongList(ids)));
 	}
-
 }
