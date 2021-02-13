@@ -34,6 +34,8 @@ import org.springblade.modules.business.vo.TeacherVO;
 import org.springblade.modules.business.service.ITeacherService;
 import org.springblade.core.boot.ctrl.BladeController;
 
+import java.util.List;
+
 /**
  * 控制器
  *
@@ -84,6 +86,7 @@ public class TeacherController extends BladeController {
 		BladeUser user = SecureUtil.getUser();
 		Long userId = user.getUserId();
 		teacher.setTeacherId(userId);
+		teacher.setResidualAmount(studentAmount);
 		return R.status(teacherService.save(teacher));
 	}
 
@@ -97,8 +100,21 @@ public class TeacherController extends BladeController {
 					@ApiParam(value = "数量", required = true) @RequestParam(required = true) Integer studentAmount) {
 		Teacher teacher = teacherService.getById(id);
 		if (teacher!=null){
-			teacher.setStudentAmount(studentAmount);
-			return R.status(teacherService.updateById(teacher));
+			//修改之前的人数
+			Integer residualAmount = teacher.getResidualAmount();
+			//修改之前的剩余名额
+			Integer studentAmount1 = teacher.getStudentAmount();
+			//修改之前已有学生数
+			Integer amount=studentAmount1-residualAmount;
+			//如果已有学生数量小于等于传入的修改值则执行修改
+			if (amount<=studentAmount){
+				teacher.setStudentAmount(studentAmount);
+				teacher.setResidualAmount(studentAmount-amount);
+				return R.status(teacherService.updateById(teacher));
+			}
+			else {
+				return R.fail("当前已有学生数量大于您要修改的值，修改失败！");
+			}
 		}
 		return null;
 	}
@@ -111,6 +127,15 @@ public class TeacherController extends BladeController {
 	@ApiOperationSupport(order = 7)
 	@ApiOperation(value = "逻辑删除", notes = "传入ids")
 	public R remove(@ApiParam(value = "主键集合", required = true) @RequestParam String ids) {
+		List<Long> list = Func.toLongList(ids);
+		for (Long aLong : list) {
+			Teacher byId = teacherService.getById(aLong);
+			Integer studentAmount = byId.getStudentAmount();
+			Integer residualAmount = byId.getResidualAmount();
+			if (!studentAmount.toString().equals(residualAmount.toString())){
+				return R.fail("删除失败，请核实您有无学生！");
+			}
+		}
 		return R.status(teacherService.deleteLogic(Func.toLongList(ids)));
 	}
 

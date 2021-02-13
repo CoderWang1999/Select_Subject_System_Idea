@@ -33,6 +33,10 @@ public class StudentVO extends Student {
 	private static final long serialVersionUID = 1L;
 	/*学生姓名*/
 	private String studentName;
+	/*所属学院*/
+	private String dept;
 	/*老师姓名*/
 	private String teacherName;
+	/*老师联系方式*/
+	private String teacherPhoneNumber;
 }

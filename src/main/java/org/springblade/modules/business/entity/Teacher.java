@@ -51,10 +51,14 @@ public class Teacher extends BaseEntity {
 	@JsonSerialize(using = ToStringSerializer.class)
     private Long teacherId;
     /**
-     * 学生数量
+     * 最大学生数量
      */
-    @ApiModelProperty(value = "学生数量")
+    @ApiModelProperty(value = "最大学生数量")
     private Integer studentAmount;
-
+	/**
+	 * 剩余名额
+	 */
+	@ApiModelProperty(value = "最大学生数量")
+	private Integer residualAmount;
 
 }

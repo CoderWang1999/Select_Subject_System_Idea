@@ -23,8 +23,10 @@ import org.springblade.modules.business.vo.StudentVO;
 import org.springblade.modules.business.mapper.StudentMapper;
 import org.springblade.modules.business.service.IStudentService;
 import org.springblade.core.mp.base.BaseServiceImpl;
+import org.springblade.modules.system.entity.Dept;
 import org.springblade.modules.system.entity.User;
 import org.springblade.modules.system.mapper.UserMapper;
+import org.springblade.modules.system.service.IDeptService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
@@ -41,6 +43,7 @@ import java.util.List;
 @AllArgsConstructor
 public class StudentServiceImpl extends BaseServiceImpl<StudentMapper, Student> implements IStudentService {
 	private final UserMapper userMapper;
+	private final IDeptService deptService;
 	@Override
 	public IPage<StudentVO> selectStudentPage(IPage<StudentVO> page, StudentVO student) {
 		List<StudentVO> vos = baseMapper.selectStudentPage(page, student);
@@ -55,6 +58,12 @@ public class StudentServiceImpl extends BaseServiceImpl<StudentMapper, Student> 
 			User stu = userMapper.selectById(studentId);
 			vo.setTeacherName(teacher.getRealName());
 			vo.setStudentName(stu.getRealName());
+			String deptId = stu.getDeptId();
+			Dept dept = deptService.getById(deptId);
+			String deptName = dept.getDeptName();
+			vo.setDept(deptName);
+			String phone = teacher.getPhone();
+			vo.setTeacherPhoneNumber(phone);
 			res.add(vo);
 		}
 		page.setRecords(res);
