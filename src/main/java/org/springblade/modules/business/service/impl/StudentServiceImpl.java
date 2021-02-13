@@ -16,17 +16,15 @@
 package org.springblade.modules.business.service.impl;
 
 import lombok.AllArgsConstructor;
+import org.springblade.core.mp.support.Condition;
+import org.springblade.core.secure.utils.SecureUtil;
 import org.springblade.modules.business.entity.Student;
-import org.springblade.modules.business.entity.Teacher;
-import org.springblade.modules.business.mapper.TeacherMapper;
 import org.springblade.modules.business.vo.StudentVO;
 import org.springblade.modules.business.mapper.StudentMapper;
 import org.springblade.modules.business.service.IStudentService;
 import org.springblade.core.mp.base.BaseServiceImpl;
-import org.springblade.modules.system.entity.Dept;
 import org.springblade.modules.system.entity.User;
 import org.springblade.modules.system.mapper.UserMapper;
-import org.springblade.modules.system.service.IDeptService;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
@@ -34,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  服务实现类
+ * 服务实现类
  *
  * @author Blade
  * @since 2021-02-05
@@ -43,27 +41,23 @@ import java.util.List;
 @AllArgsConstructor
 public class StudentServiceImpl extends BaseServiceImpl<StudentMapper, Student> implements IStudentService {
 	private final UserMapper userMapper;
-	private final IDeptService deptService;
+	private final StudentMapper studentMapper;
+
 	@Override
 	public IPage<StudentVO> selectStudentPage(IPage<StudentVO> page, StudentVO student) {
-		List<StudentVO> vos = baseMapper.selectStudentPage(page, student);
-		List<StudentVO> res=new ArrayList<>();
-		if (vos.size()==0){
-			return null;
-		}
+		Long userId = SecureUtil.getUserId();
+		User user = userMapper.selectById(userId);
+		String userDeptId = user.getDeptId();
+		List<StudentVO> vos = baseMapper.selectStudentPage(page, student, userDeptId);
+		List<StudentVO> res = new ArrayList<>();
 		for (StudentVO vo : vos) {
-			Long studentId = vo.getStudentId();
-			Long teacherId = vo.getTeacherId();
-			User teacher = userMapper.selectById(teacherId);
-			User stu = userMapper.selectById(studentId);
-			vo.setTeacherName(teacher.getRealName());
-			vo.setStudentName(stu.getRealName());
-			String deptId = stu.getDeptId();
-			Dept dept = deptService.getById(deptId);
-			String deptName = dept.getDeptName();
-			vo.setDept(deptName);
-			String phone = teacher.getPhone();
-			vo.setTeacherPhoneNumber(phone);
+			vo.setBooleanChoose("否");
+			Student student1 = new Student();
+			student1.setStudentId(userId);
+			Student one = studentMapper.selectOne(Condition.getQueryWrapper(student1));
+			if (one != null && one.getTeacherId() != null && one.getTeacherId().equals(vo.getTeacherId())) {
+				vo.setBooleanChoose("是");
+			}
 			res.add(vo);
 		}
 		page.setRecords(res);

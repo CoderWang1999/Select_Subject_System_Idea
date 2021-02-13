@@ -19,6 +19,7 @@ import org.springblade.modules.business.entity.Student;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import io.swagger.annotations.ApiModel;
+import org.springblade.modules.business.entity.Teacher;
 
 /**
  * 视图实体类
@@ -29,14 +30,18 @@ import io.swagger.annotations.ApiModel;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ApiModel(value = "StudentVO对象", description = "StudentVO对象")
-public class StudentVO extends Student {
+public class StudentVO extends Teacher {
 	private static final long serialVersionUID = 1L;
-	/*学生姓名*/
-	private String studentName;
-	/*所属学院*/
-	private String dept;
 	/*老师姓名*/
 	private String teacherName;
-	/*老师联系方式*/
+	/*职称*/
+	private String postName;
+	/*所属学院*/
+	private String dept;
+	/*剩余名额*/
+	private Integer residualAmount;
+	/*联系方式*/
 	private String teacherPhoneNumber;
+	/*已选择*/
+	private String booleanChoose;
 }

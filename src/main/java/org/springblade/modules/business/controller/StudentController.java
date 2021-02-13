@@ -20,13 +20,17 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
+
 import javax.validation.Valid;
+
 import org.springblade.core.mp.support.Condition;
 import org.springblade.core.mp.support.Query;
 import org.springblade.core.secure.BladeUser;
 import org.springblade.core.secure.utils.SecureUtil;
 import org.springblade.core.tool.api.R;
 import org.springblade.core.tool.utils.Func;
+import org.springblade.modules.business.entity.Teacher;
+import org.springblade.modules.business.service.ITeacherService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -36,7 +40,6 @@ import org.springblade.modules.business.service.IStudentService;
 import org.springblade.core.boot.ctrl.BladeController;
 
 /**
- *
  * @author CoderWang
  * @since 2021-02-05
  */
@@ -47,6 +50,7 @@ import org.springblade.core.boot.ctrl.BladeController;
 public class StudentController extends BladeController {
 
 	private IStudentService studentService;
+	private ITeacherService teacherService;
 
 	/**
 	 * 详情
@@ -61,7 +65,7 @@ public class StudentController extends BladeController {
 
 
 	/**
-	 * 自定义分页 
+	 * 自定义分页
 	 */
 	@GetMapping("/page")
 	@ApiOperationSupport(order = 3)
@@ -77,18 +81,37 @@ public class StudentController extends BladeController {
 	@PostMapping("/save")
 	@ApiOperationSupport(order = 4)
 	@ApiOperation(value = "选择老师", notes = "传入student")
-	public R save(@ApiParam(value = "老师id", required = true) @RequestParam(required = true) String teacherId) {
-		Student student = new Student();
-		long l = Long.parseLong(teacherId);
-		student.setTeacherId(l);
+	public synchronized R save(@ApiParam(value = "老师id", required = true) @RequestParam(required = true) String teacherId) {
+		Teacher t = new Teacher();
+		t.setTeacherId(Long.parseLong(teacherId));
+		Teacher teacher = teacherService.getOne(Condition.getQueryWrapper(t));
+		Integer residualAmount = teacher.getResidualAmount();
+		if (residualAmount == 0) {
+			return R.fail("老师名额已满，请选择其他老师！");
+		}
+		teacher.setResidualAmount(residualAmount - 1);
+		teacherService.updateById(teacher);
 		BladeUser user = SecureUtil.getUser();
 		Long userId = user.getUserId();
+		Student student = new Student();
 		student.setStudentId(userId);
+		Student one = studentService.getOne(Condition.getQueryWrapper(student));
+		if (one != null) {
+			Long tId = one.getTeacherId();
+			Teacher teacher1 = new Teacher();
+			teacher1.setTeacherId(tId);
+			Teacher teacher2 = teacherService.getOne(Condition.getQueryWrapper(teacher1));
+			teacher2.setResidualAmount(teacher2.getResidualAmount() + 1);
+			teacherService.updateById(teacher2);
+			one.setTeacherId(Long.parseLong(teacherId));
+			return R.status(studentService.updateById(one));
+		}
+		student.setTeacherId(Long.parseLong(teacherId));
 		return R.status(studentService.save(student));
 	}
 
 	/**
-	 * 修改 
+	 * 修改
 	 */
 	@PostMapping("/update")
 	@ApiOperationSupport(order = 5)
@@ -98,7 +121,7 @@ public class StudentController extends BladeController {
 	}
 
 	/**
-	 * 新增或修改 
+	 * 新增或修改
 	 */
 	@PostMapping("/submit")
 	@ApiOperationSupport(order = 6)
@@ -107,9 +130,9 @@ public class StudentController extends BladeController {
 		return R.status(studentService.saveOrUpdate(student));
 	}
 
-	
+
 	/**
-	 * 删除 
+	 * 删除
 	 */
 	@PostMapping("/remove")
 	@ApiOperationSupport(order = 7)

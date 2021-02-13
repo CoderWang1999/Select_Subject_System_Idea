@@ -36,6 +36,6 @@ public interface StudentMapper extends BaseMapper<Student> {
 	 * @param student
 	 * @return
 	 */
-	List<StudentVO> selectStudentPage(IPage page, StudentVO student);
+	List<StudentVO> selectStudentPage(IPage page, StudentVO student ,String userDeptId);
 
 }

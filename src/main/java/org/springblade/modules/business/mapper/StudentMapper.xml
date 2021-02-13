@@ -4,7 +4,27 @@
 
 
     <select id="selectStudentPage" resultType="org.springblade.modules.business.vo.StudentVO">
-        select * from t_student where is_deleted = 0
+        SELECT
+        u.real_name as teacherName,
+        u.phone as teacherPhoneNumber,
+        p.post_name as postName,
+        d.dept_name as dept,
+        t.*
+        FROM
+        t_teacher as t,
+        blade_user as u,
+        blade_dept as d,
+        blade_post as p
+        WHERE
+        t.teacher_id=u.id
+        AND
+        u.post_id=p.id
+        AND
+        u.dept_id=d.id
+        AND
+        t.is_deleted=0
+        AND
+        d.id=#{userDeptId}
     </select>
 
 </mapper>
