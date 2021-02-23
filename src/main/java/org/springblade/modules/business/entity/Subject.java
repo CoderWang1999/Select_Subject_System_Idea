@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import org.springblade.core.mp.base.BaseEntity;
 import java.time.LocalDateTime;
+import java.util.Date;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import io.swagger.annotations.ApiModel;
@@ -72,7 +74,7 @@ public class Subject extends BaseEntity {
 	@JsonFormat(
 		pattern = "yyyy-MM-dd HH:mm:ss"
 	)
-    private LocalDateTime selectTime;
+    private Date selectTime;
     /**
      * 进度
      */

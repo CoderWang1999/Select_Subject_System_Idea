@@ -21,7 +21,7 @@ import org.springblade.core.mp.base.BaseService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
 /**
- *  服务类
+ * 服务类
  *
  * @author Blade
  * @since 2021-02-18
@@ -37,4 +37,11 @@ public interface ISubjectService extends BaseService<Subject> {
 	 */
 	IPage<SubjectVO> selectSubjectPage(IPage<SubjectVO> page, SubjectVO subject);
 
+	/**
+	 * 选题
+	 *
+	 * @param id
+	 * @return
+	 */
+	Boolean select(String id, String remark);
 }

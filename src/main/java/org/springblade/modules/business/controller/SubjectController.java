@@ -20,7 +20,9 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
+
 import javax.validation.Valid;
+
 import org.springblade.core.mp.support.Condition;
 import org.springblade.core.mp.support.Query;
 import org.springblade.core.tool.api.R;
@@ -57,7 +59,7 @@ public class SubjectController extends BladeController {
 	}
 
 	/**
-	 * 分页 
+	 * 分页
 	 */
 	@GetMapping("/list")
 	@ApiOperationSupport(order = 2)
@@ -68,7 +70,7 @@ public class SubjectController extends BladeController {
 	}
 
 	/**
-	 * 自定义分页 
+	 * 自定义分页
 	 */
 	@GetMapping("/page")
 	@ApiOperationSupport(order = 3)
@@ -79,7 +81,7 @@ public class SubjectController extends BladeController {
 	}
 
 	/**
-	 * 新增 
+	 * 新增
 	 */
 	@PostMapping("/save")
 	@ApiOperationSupport(order = 4)
@@ -90,7 +92,7 @@ public class SubjectController extends BladeController {
 	}
 
 	/**
-	 * 修改 
+	 * 修改
 	 */
 	@PostMapping("/update")
 	@ApiOperationSupport(order = 5)
@@ -100,14 +102,27 @@ public class SubjectController extends BladeController {
 	}
 
 
-	
 	/**
-	 * 删除 
+	 * 删除
 	 */
 	@PostMapping("/remove")
 	@ApiOperationSupport(order = 7)
 	@ApiOperation(value = "逻辑删除", notes = "传入ids")
 	public R remove(@ApiParam(value = "主键集合", required = true) @RequestParam String ids) {
 		return R.status(subjectService.deleteLogic(Func.toLongList(ids)));
+	}
+
+	/**
+	 * 选题
+	 */
+	@PostMapping("/select")
+	@ApiOperationSupport(order = 8)
+	@ApiOperation(value = "选题", notes = "传入id")
+	public synchronized R select(@ApiParam(value = "主键id", required = true) @RequestParam String id, @ApiParam(value = "备注", required = true) @RequestParam String remark) {
+		Subject subject = subjectService.getById(id);
+		if (subject.getStudentName() != null) {
+			return R.fail("此选题已被其他同学选择！");
+		}
+		return R.status(subjectService.select(id, remark));
 	}
 }
