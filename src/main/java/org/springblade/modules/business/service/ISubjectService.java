@@ -44,4 +44,12 @@ public interface ISubjectService extends BaseService<Subject> {
 	 * @return
 	 */
 	Boolean select(String id, String remark);
+
+	/**
+	 * 修改进度
+	 *
+	 * @param progress
+	 * @return
+	 */
+	Boolean editProgress(String id, String progress);
 }

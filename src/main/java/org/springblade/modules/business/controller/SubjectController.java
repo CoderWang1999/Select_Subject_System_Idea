@@ -125,4 +125,14 @@ public class SubjectController extends BladeController {
 		}
 		return R.status(subjectService.select(id, remark));
 	}
+
+	/**
+	 * 修改进度
+	 */
+	@PostMapping("/editProgress")
+	@ApiOperationSupport(order = 9)
+	@ApiOperation(value = "修改进度", notes = "传入progress")
+	public R editProgress(@ApiParam(value = "主键id", required = true) @RequestParam String id, @ApiParam(value = "进度", required = true) @RequestParam String progress) {
+		return R.status(subjectService.editProgress(id, progress));
+	}
 }

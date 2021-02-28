@@ -67,4 +67,15 @@ public class SubjectServiceImpl extends BaseServiceImpl<SubjectMapper, Subject> 
 			return false;
 		}
 	}
+
+	@Override
+	public Boolean editProgress(String id, String progress) {
+		Subject subject = baseMapper.selectById(id);
+		if (subject == null) {
+			return false;
+		}
+		subject.setProgress(progress);
+		baseMapper.updateById(subject);
+		return true;
+	}
 }
