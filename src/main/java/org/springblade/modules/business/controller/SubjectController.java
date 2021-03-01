@@ -20,9 +20,8 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
-
 import javax.validation.Valid;
-
+import org.apache.commons.lang3.StringUtils;
 import org.springblade.core.mp.support.Condition;
 import org.springblade.core.mp.support.Query;
 import org.springblade.core.tool.api.R;
@@ -87,6 +86,7 @@ public class SubjectController extends BladeController {
 	@ApiOperationSupport(order = 4)
 	@ApiOperation(value = "新增", notes = "传入subject")
 	public R save(@Valid @RequestBody Subject subject) {
+		subject.setStudentName(null);
 		subject.setProgress("待选择");
 		return R.status(subjectService.save(subject));
 	}
@@ -118,12 +118,12 @@ public class SubjectController extends BladeController {
 	@PostMapping("/select")
 	@ApiOperationSupport(order = 8)
 	@ApiOperation(value = "选题", notes = "传入id")
-	public synchronized R select(@ApiParam(value = "主键id", required = true) @RequestParam String id, @ApiParam(value = "备注", required = true) @RequestParam String remark) {
+	public synchronized R select(@ApiParam(value = "主键id", required = true) @RequestParam String id) {
 		Subject subject = subjectService.getById(id);
-		if (subject.getStudentName() != null) {
+		if (StringUtils.isNotEmpty(subject.getStudentName())) {
 			return R.fail("此选题已被其他同学选择！");
 		}
-		return R.status(subjectService.select(id, remark));
+		return R.status(subjectService.select(id));
 	}
 
 	/**

@@ -15,16 +15,21 @@
  */
 package org.springblade.modules.business.service.impl;
 
+import lombok.AllArgsConstructor;
 import org.springblade.core.mp.support.Condition;
+import org.springblade.core.secure.BladeUser;
 import org.springblade.core.secure.utils.SecureUtil;
 import org.springblade.modules.business.entity.Subject;
 import org.springblade.modules.business.vo.SubjectVO;
 import org.springblade.modules.business.mapper.SubjectMapper;
 import org.springblade.modules.business.service.ISubjectService;
 import org.springblade.core.mp.base.BaseServiceImpl;
+import org.springblade.modules.system.entity.User;
+import org.springblade.modules.system.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -34,17 +39,21 @@ import java.util.Date;
  * @since 2021-02-18
  */
 @Service
+@AllArgsConstructor
 public class SubjectServiceImpl extends BaseServiceImpl<SubjectMapper, Subject> implements ISubjectService {
-
+	private final UserMapper userMapper;
+	private final SubjectMapper subjectMapper;
 	@Override
 	public IPage<SubjectVO> selectSubjectPage(IPage<SubjectVO> page, SubjectVO subject) {
 		return page.setRecords(baseMapper.selectSubjectPage(page, subject));
 	}
 
 	@Override
-	public Boolean select(String id, String remark) {
+	public Boolean select(String id) {
 		try {
-			String userName = SecureUtil.getUserName();
+			Long userId = SecureUtil.getUserId();
+			User user = userMapper.selectById(userId);
+			String userName = user.getRealName();
 			Subject s = new Subject();
 			s.setStudentName(userName);
 			Subject one = baseMapper.selectOne(Condition.getQueryWrapper(s));
@@ -52,14 +61,13 @@ public class SubjectServiceImpl extends BaseServiceImpl<SubjectMapper, Subject> 
 			if (one != null) {
 				one.setStudentName(null);
 				one.setSelectTime(null);
-				one.setRemark(null);
-				baseMapper.updateById(one);
+				one.setProgress("待选择");
+				subjectMapper.updateById(one);
 			}
 			Subject subject = baseMapper.selectById(id);
 			subject.setProgress("已被选");
 			subject.setSelectTime(new Date());
 			subject.setStudentName(userName);
-			subject.setRemark(remark);
 			baseMapper.updateById(subject);
 			return true;
 		} catch (Exception e) {

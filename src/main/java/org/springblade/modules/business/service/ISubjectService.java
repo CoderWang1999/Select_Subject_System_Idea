@@ -43,7 +43,7 @@ public interface ISubjectService extends BaseService<Subject> {
 	 * @param id
 	 * @return
 	 */
-	Boolean select(String id, String remark);
+	Boolean select(String id);
 
 	/**
 	 * 修改进度

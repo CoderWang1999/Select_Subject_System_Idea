@@ -15,6 +15,8 @@
  */
 package org.springblade.modules.business.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -63,11 +65,13 @@ public class Subject extends BaseEntity {
      * 选题人姓名
      */
     @ApiModelProperty(value = "选题人姓名")
-    private String studentName;
+	@TableField(updateStrategy = FieldStrategy.IGNORED)
+	private String studentName;
     /**
      * 选题时间
      */
     @ApiModelProperty(value = "选题时间")
+	@TableField(updateStrategy = FieldStrategy.IGNORED)
 	@DateTimeFormat(
 		pattern = "yyyy-MM-dd HH:mm:ss"
 	)
