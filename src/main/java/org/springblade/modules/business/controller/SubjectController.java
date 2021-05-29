@@ -20,17 +20,23 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
+
 import javax.validation.Valid;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springblade.core.mp.support.Condition;
 import org.springblade.core.mp.support.Query;
+import org.springblade.core.secure.BladeUser;
+import org.springblade.core.secure.utils.SecureUtil;
 import org.springblade.core.tool.api.R;
 import org.springblade.core.tool.utils.Func;
+import org.springblade.modules.business.entity.Student;
+import org.springblade.modules.business.service.IStudentService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import org.springblade.modules.business.entity.Subject;
-import org.springblade.modules.business.vo.SubjectVO;
 import org.springblade.modules.business.service.ISubjectService;
 import org.springblade.core.boot.ctrl.BladeController;
 
@@ -44,7 +50,8 @@ import org.springblade.core.boot.ctrl.BladeController;
 @Api(value = "选题管理", tags = "选题管理")
 public class SubjectController extends BladeController {
 
-	private ISubjectService subjectService;
+	private final ISubjectService subjectService;
+	private final IStudentService studentService;
 
 	/**
 	 * 详情
@@ -64,20 +71,41 @@ public class SubjectController extends BladeController {
 	@ApiOperationSupport(order = 2)
 	@ApiOperation(value = "分页", notes = "传入subject")
 	public R<IPage<Subject>> list(Subject subject, Query query) {
+		//获取当前登录用户
+		BladeUser user = SecureUtil.getUser();
+		Long userId = user.getUserId();
+		//角色名称
+		String roleName = user.getRoleName();
+		if ("teacher".equals(roleName)) {
+			subject.setCreateUser(userId);
+		}
+		if ("student".equals(roleName)) {
+			Student student = new Student();
+			student.setStudentId(userId);
+			Student one = studentService.getOne(Condition.getQueryWrapper(student));
+			if (one == null) {
+				return R.data(null);
+			}
+			Long teacherId = one.getTeacherId();
+			if (teacherId == null) {
+				return R.data(null);
+			}
+			subject.setCreateUser(teacherId);
+		}
 		IPage<Subject> pages = subjectService.page(Condition.getPage(query), Condition.getQueryWrapper(subject));
 		return R.data(pages);
 	}
 
-	/**
-	 * 自定义分页
-	 */
-	@GetMapping("/page")
-	@ApiOperationSupport(order = 3)
-	@ApiOperation(value = "分页", notes = "传入subject")
-	public R<IPage<SubjectVO>> page(SubjectVO subject, Query query) {
-		IPage<SubjectVO> pages = subjectService.selectSubjectPage(Condition.getPage(query), subject);
-		return R.data(pages);
-	}
+//	/**
+//	 * 自定义分页
+//	 */
+//	@GetMapping("/page")
+//	@ApiOperationSupport(order = 3)
+//	@ApiOperation(value = "分页", notes = "传入subject")
+//	public R<IPage<SubjectVO>> page(SubjectVO subject, Query query) {
+//		IPage<SubjectVO> pages = subjectService.selectSubjectPage(Condition.getPage(query), subject);
+//		return R.data(pages);
+//	}
 
 	/**
 	 * 新增
@@ -86,6 +114,11 @@ public class SubjectController extends BladeController {
 	@ApiOperationSupport(order = 4)
 	@ApiOperation(value = "新增", notes = "传入subject")
 	public R save(@Valid @RequestBody Subject subject) {
+		BladeUser user = SecureUtil.getUser();
+		String roleName = user.getRoleName();
+		if ("student".equals(roleName)) {
+			return R.fail("当前角色权限不足！");
+		}
 		subject.setStudentName(null);
 		subject.setProgress("待选择");
 		return R.status(subjectService.save(subject));
@@ -98,6 +131,11 @@ public class SubjectController extends BladeController {
 	@ApiOperationSupport(order = 5)
 	@ApiOperation(value = "修改", notes = "传入subject")
 	public R update(@Valid @RequestBody Subject subject) {
+		BladeUser user = SecureUtil.getUser();
+		String roleName = user.getRoleName();
+		if ("student".equals(roleName)) {
+			return R.fail("当前角色权限不足！");
+		}
 		return R.status(subjectService.updateById(subject));
 	}
 
@@ -109,6 +147,11 @@ public class SubjectController extends BladeController {
 	@ApiOperationSupport(order = 7)
 	@ApiOperation(value = "逻辑删除", notes = "传入ids")
 	public R remove(@ApiParam(value = "主键集合", required = true) @RequestParam String ids) {
+		BladeUser user = SecureUtil.getUser();
+		String roleName = user.getRoleName();
+		if ("student".equals(roleName)) {
+			return R.fail("当前角色权限不足！");
+		}
 		return R.status(subjectService.deleteLogic(Func.toLongList(ids)));
 	}
 
@@ -118,7 +161,13 @@ public class SubjectController extends BladeController {
 	@PostMapping("/select")
 	@ApiOperationSupport(order = 8)
 	@ApiOperation(value = "选题", notes = "传入id")
+	@Transactional(rollbackFor = Exception.class)
 	public synchronized R select(@ApiParam(value = "主键id", required = true) @RequestParam String id) {
+		BladeUser user = SecureUtil.getUser();
+		String roleName = user.getRoleName();
+		if (!"student".equals(roleName)) {
+			return R.fail("只有学生才可以选题哦！");
+		}
 		Subject subject = subjectService.getById(id);
 		if (StringUtils.isNotEmpty(subject.getStudentName())) {
 			return R.fail("此选题已被其他同学选择！");
@@ -133,6 +182,11 @@ public class SubjectController extends BladeController {
 	@ApiOperationSupport(order = 9)
 	@ApiOperation(value = "修改进度", notes = "传入progress")
 	public R editProgress(@ApiParam(value = "主键id", required = true) @RequestParam String id, @ApiParam(value = "进度", required = true) @RequestParam String progress) {
+		BladeUser user = SecureUtil.getUser();
+		String roleName = user.getRoleName();
+		if ("student".equals(roleName)) {
+			return R.fail("当前角色权限不足！");
+		}
 		return R.status(subjectService.editProgress(id, progress));
 	}
 }

@@ -20,9 +20,7 @@ import com.github.xiaoymin.knife4j.annotations.ApiOperationSupport;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
-
 import javax.validation.Valid;
-
 import org.springblade.core.mp.support.Condition;
 import org.springblade.core.mp.support.Query;
 import org.springblade.core.secure.BladeUser;
@@ -31,6 +29,7 @@ import org.springblade.core.tool.api.R;
 import org.springblade.core.tool.utils.Func;
 import org.springblade.modules.business.entity.Teacher;
 import org.springblade.modules.business.service.ITeacherService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -81,6 +80,7 @@ public class StudentController extends BladeController {
 	@PostMapping("/save")
 	@ApiOperationSupport(order = 4)
 	@ApiOperation(value = "选择老师", notes = "传入student")
+	@Transactional(rollbackFor = Exception.class)
 	public synchronized R save(@ApiParam(value = "老师id", required = true) @RequestParam(required = true) String teacherId) {
 		Teacher t = new Teacher();
 		t.setTeacherId(Long.parseLong(teacherId));

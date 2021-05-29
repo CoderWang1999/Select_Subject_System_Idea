@@ -26,6 +26,7 @@ import org.springblade.core.secure.BladeUser;
 import org.springblade.core.secure.utils.SecureUtil;
 import org.springblade.core.tool.api.R;
 import org.springblade.core.tool.utils.Func;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -34,6 +35,7 @@ import org.springblade.modules.business.vo.TeacherVO;
 import org.springblade.modules.business.service.ITeacherService;
 import org.springblade.core.boot.ctrl.BladeController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -70,7 +72,20 @@ public class TeacherController extends BladeController {
 	@ApiOperationSupport(order = 3)
 	@ApiOperation(value = "分页", notes = "传入teacher")
 	public R<IPage<TeacherVO>> page(TeacherVO teacher, Query query) {
+		BladeUser user = SecureUtil.getUser();
+		Long userId = user.getUserId();
 		IPage<TeacherVO> pages = teacherService.selectTeacherPage(Condition.getPage(query), teacher);
+		List<TeacherVO> records = pages.getRecords();
+		if (!records.isEmpty()) {
+			for (TeacherVO record : records) {
+				Long createUser = record.getCreateUser();
+				if (userId.equals(createUser)) {
+					List<TeacherVO> list = new ArrayList<>();
+					list.add(record);
+					return R.data(pages.setRecords(list));
+				}
+			}
+		}
 		return R.data(pages);
 	}
 
@@ -80,7 +95,8 @@ public class TeacherController extends BladeController {
 	@PostMapping("/save")
 	@ApiOperationSupport(order = 4)
 	@ApiOperation(value = "设置可辅导学生数量", notes = "传入数量")
-	public R save(@ApiParam(value = "数量", required = true) @RequestParam(required = true) Integer studentAmount) {
+	@Transactional(rollbackFor = Exception.class)
+	public R save(@ApiParam(value = "数量", required = true) @RequestParam Integer studentAmount) {
 		Teacher teacher = new Teacher();
 		teacher.setStudentAmount(studentAmount);
 		BladeUser user = SecureUtil.getUser();
@@ -96,23 +112,23 @@ public class TeacherController extends BladeController {
 	@PostMapping("/update")
 	@ApiOperationSupport(order = 5)
 	@ApiOperation(value = "修改", notes = "传入teacher")
+	@Transactional(rollbackFor = Exception.class)
 	public R update(@ApiParam(value = "id", required = true) @RequestParam(required = true) String id,
 					@ApiParam(value = "数量", required = true) @RequestParam(required = true) Integer studentAmount) {
 		Teacher teacher = teacherService.getById(id);
-		if (teacher!=null){
+		if (teacher != null) {
 			//修改之前的人数
 			Integer residualAmount = teacher.getResidualAmount();
 			//修改之前的剩余名额
 			Integer studentAmount1 = teacher.getStudentAmount();
 			//修改之前已有学生数
-			Integer amount=studentAmount1-residualAmount;
+			Integer amount = studentAmount1 - residualAmount;
 			//如果已有学生数量小于等于传入的修改值则执行修改
-			if (amount<=studentAmount){
+			if (amount <= studentAmount) {
 				teacher.setStudentAmount(studentAmount);
-				teacher.setResidualAmount(studentAmount-amount);
+				teacher.setResidualAmount(studentAmount - amount);
 				return R.status(teacherService.updateById(teacher));
-			}
-			else {
+			} else {
 				return R.fail("当前已有学生数量大于您要修改的值，修改失败！");
 			}
 		}
@@ -126,13 +142,14 @@ public class TeacherController extends BladeController {
 	@PostMapping("/remove")
 	@ApiOperationSupport(order = 7)
 	@ApiOperation(value = "逻辑删除", notes = "传入ids")
+	@Transactional(rollbackFor = Exception.class)
 	public R remove(@ApiParam(value = "主键集合", required = true) @RequestParam String ids) {
 		List<Long> list = Func.toLongList(ids);
 		for (Long aLong : list) {
 			Teacher byId = teacherService.getById(aLong);
 			Integer studentAmount = byId.getStudentAmount();
 			Integer residualAmount = byId.getResidualAmount();
-			if (!studentAmount.toString().equals(residualAmount.toString())){
+			if (!studentAmount.toString().equals(residualAmount.toString())) {
 				return R.fail("删除失败，请核实您有无学生！");
 			}
 		}
